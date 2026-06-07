@@ -1,6 +1,6 @@
 const { addonBuilder, serveHTTP, getRouter } = require('stremio-addon-sdk');
 
-const VIDSRC_BASE = 'https://vidsrc.xyz';
+const VIDSRC_BASE = 'https://vidsrc.in';
 
 const manifest = {
   id: 'community.vidsrc',
@@ -21,23 +21,18 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
-// ── Stream handler ─────────────────────────────────────────────────────────────
 builder.defineStreamHandler(async ({ type, id }) => {
   try {
     let embedUrl;
-
     if (type === 'movie') {
-      // id is like "tt1234567"
       embedUrl = `${VIDSRC_BASE}/embed/movie?imdb=${id}`;
     } else if (type === 'series') {
-      // id is like "tt1234567:1:2" (imdb:season:episode)
       const [imdbId, season, episode] = id.split(':');
       if (!season || !episode) return { streams: [] };
       embedUrl = `${VIDSRC_BASE}/embed/tv?imdb=${imdbId}&season=${season}&episode=${episode}`;
     } else {
       return { streams: [] };
     }
-
     const streams = [
       {
         name: 'VidSrc',
@@ -48,7 +43,6 @@ builder.defineStreamHandler(async ({ type, id }) => {
         },
       },
     ];
-
     return { streams };
   } catch (err) {
     console.error('Stream handler error:', err);
@@ -58,7 +52,6 @@ builder.defineStreamHandler(async ({ type, id }) => {
 
 const addonInterface = builder.getInterface();
 
-// ── Vercel serverless export ───────────────────────────────────────────────────
 if (process.env.VERCEL) {
   const router = getRouter(addonInterface);
   module.exports = (req, res) => {
@@ -68,7 +61,6 @@ if (process.env.VERCEL) {
     });
   };
 } else {
-  // ── Local dev server ─────────────────────────────────────────────────────────
   const PORT = process.env.PORT || 7000;
   serveHTTP(addonInterface, { port: PORT });
   console.log(`\n✅  VidSrc Stremio Addon running!`);
